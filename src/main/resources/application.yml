@@ -14,10 +14,32 @@ spring:
     properties:
       hibernate:
         format_sql: true
-  jwt:
-    secret-key: "09d62fc50a9d8c09c3c3a82a3d5762cdfd85de199cb864b5378a77ff2c230159"
-    expiration: 360000000000
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+    validate-on-migrate: true
 
+  jwt:
+    secret-key:
+    expiration: 360000000000
+  mail:
+    host: smtp.yandex.ru
+    port: 587
+    username: stmp@yandex.ru
+    password: 111
+    protocol: smtp
+    properties:
+      mail.smtp.auth: true
+      mail.smtp.starttls.enable: true
+      mail.smtp.ssl.trust: smtp.yandex.ru
+minio:
+  url: http://localhost:9000
+  access:
+    name: new-access-key
+    secret: new-secret-key
+    bucket:
+      name: vetcare
 
 #logging:
 #  level:
