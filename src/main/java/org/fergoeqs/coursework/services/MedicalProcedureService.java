@@ -54,8 +54,13 @@ public class MedicalProcedureService {
 
     public MedicalProcedure save(MedicalProcedureDTO mpDTO) throws IOException, URISyntaxException {
         MedicalProcedure mp = setRelativeFields(mpMapper.fromDTO(mpDTO), mpDTO);
-//        mp.setDate(LocalDateTime.now());
-        mp.setReportUrl(reportGenerator.generateProcedureReport(medicalProcedureRepository.save(mp)));
+
+        mp.setReportUrl("PENDING");
+        mp = medicalProcedureRepository.save(mp);  
+
+        String objectName = reportGenerator.generateProcedureReport(mp);
+        mp.setReportUrl(objectName);
+
         return medicalProcedureRepository.save(mp);
     }
 
