@@ -1,6 +1,7 @@
 package org.fergoeqs.coursework.services;
 
 import org.fergoeqs.coursework.dto.AnamnesisDTO;
+import org.fergoeqs.coursework.exception.ResourceNotFoundException;
 import org.fergoeqs.coursework.models.Anamnesis;
 import org.fergoeqs.coursework.repositories.AnamnesisRepository;
 import org.fergoeqs.coursework.utils.Mappers.AnamnesisMapper;
@@ -26,7 +27,8 @@ public class AnamnesisService {
     }
 
     public Anamnesis findAnamnesisById(Long id) {
-        return anamnesisRepository.findById(id).orElse(null);
+        return anamnesisRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Anamnesis not found with id: " + id));
     }
 
     public List<Anamnesis> findAllAnamnesesByPet(Long petId) {

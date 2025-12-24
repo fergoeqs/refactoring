@@ -1,5 +1,6 @@
 package org.fergoeqs.coursework.utils;
 
+import org.fergoeqs.coursework.exception.ResourceNotFoundException;
 import org.fergoeqs.coursework.models.AppUser;
 import org.fergoeqs.coursework.repositories.UserRepository;
 import org.fergoeqs.coursework.security.UserDetailsServiceImpl;
@@ -28,7 +29,8 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
         String username = authentication.getName();
         String password = authentication.getCredentials().toString();
-        AppUser user = userRepository.findByUsername(username).orElseThrow();
+        AppUser user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with username: " + username));
         Collection<GrantedAuthority> authorities = user.getAuthorities();
 
 

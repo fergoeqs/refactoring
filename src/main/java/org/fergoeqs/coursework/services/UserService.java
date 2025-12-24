@@ -2,6 +2,7 @@ package org.fergoeqs.coursework.services;
 
 import org.apache.coyote.BadRequestException;
 import org.fergoeqs.coursework.dto.AppUserDTO;
+import org.fergoeqs.coursework.exception.ResourceNotFoundException;
 import org.fergoeqs.coursework.exception.UnauthorizedAccessException;
 import org.fergoeqs.coursework.models.AppUser;
 import org.fergoeqs.coursework.models.enums.RoleType;
@@ -99,7 +100,8 @@ public class UserService {
     }
 
     public  AppUser updateUserForAdmin(Long id, AppUserDTO userDTO) {
-        AppUser user = userRepository.findById(id).orElseThrow();
+        AppUser user = userRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
         appUserMapper.updateUserForAdminFromDTO(userDTO, user);
         if (userDTO.clinic() == null) {
             user.setClinic(null);
@@ -109,7 +111,8 @@ public class UserService {
     }
 
     public AppUser updateUserRoles(Long id, RoleType newRole) {
-        AppUser user = userRepository.findById(id).orElseThrow();
+        AppUser user = userRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
         user.getRoles().clear();
         user.getRoles().add(newRole);
         userRepository.save(user);

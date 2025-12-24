@@ -1,6 +1,7 @@
 package org.fergoeqs.coursework.services;
 
 import org.fergoeqs.coursework.dto.PetDTO;
+import org.fergoeqs.coursework.exception.ResourceNotFoundException;
 import org.fergoeqs.coursework.models.AppUser;
 import org.fergoeqs.coursework.models.Pet;
 import org.fergoeqs.coursework.models.enums.RoleType;
@@ -34,7 +35,8 @@ public class PetsService {
     }
 
     public Pet findPetById(Long petId) {
-        return petsRepository.findById(petId).orElseThrow();
+        return petsRepository.findById(petId)
+                .orElseThrow(() -> new ResourceNotFoundException("Pet not found with id: " + petId));
     }
 
     public List<Pet> findPetsByOwner(Long ownerId) {
@@ -59,7 +61,8 @@ public class PetsService {
 
     @Transactional
     public Pet updatePet(Long petId, AppUser author, PetDTO petDTO) {
-        Pet pet = petsRepository.findById(petId).orElseThrow();
+        Pet pet = petsRepository.findById(petId)
+                .orElseThrow(() -> new ResourceNotFoundException("Pet not found with id: " + petId));
         if (!(pet.getOwner()!= null && pet.getOwner().equals(author)) && !isAdmin(author) && !isVet(author) ) {
             throw new IllegalArgumentException("User is not allowed to update this pet (only for owner, vet or admin)");
         }
@@ -69,7 +72,8 @@ public class PetsService {
 
     @Transactional
     public void deletePet(Long petId, AppUser deleter) {
-        Pet pet = petsRepository.findById(petId).orElseThrow();
+        Pet pet = petsRepository.findById(petId)
+                .orElseThrow(() -> new ResourceNotFoundException("Pet not found with id: " + petId));
         if (!(isAdmin(deleter) && !isVet(deleter))) {
             throw new IllegalArgumentException("User is not allowed to delete pets");
         }
@@ -78,14 +82,16 @@ public class PetsService {
 
     @Transactional
     public void placeInSector(Long petId, Long sectorId) {
-        Pet pet = petsRepository.findById(petId).orElseThrow();
+        Pet pet = petsRepository.findById(petId)
+                .orElseThrow(() -> new ResourceNotFoundException("Pet not found with id: " + petId));
         pet.setSector(sectorsService.findSectorById(sectorId));
         petsRepository.save(pet);
     }
 
     @Transactional
     public void removeFromSector(Long petId) {
-        Pet pet = petsRepository.findById(petId).orElseThrow();
+        Pet pet = petsRepository.findById(petId)
+                .orElseThrow(() -> new ResourceNotFoundException("Pet not found with id: " + petId));
         pet.setSector(null);
         petsRepository.save(pet);
     }
@@ -93,7 +99,8 @@ public class PetsService {
 
     @Transactional
     public void bindPet(Long petId, AppUser vet) {
-        Pet pet = petsRepository.findById(petId).orElseThrow();
+        Pet pet = petsRepository.findById(petId)
+                .orElseThrow(() -> new ResourceNotFoundException("Pet not found with id: " + petId));
         if (!isVet(vet)) {
             throw new IllegalArgumentException("User is not allowed to bind pets");
         }
@@ -103,7 +110,8 @@ public class PetsService {
 
     @Transactional
     public void unbindPet(Long petId) {
-        Pet pet = petsRepository.findById(petId).orElseThrow();
+        Pet pet = petsRepository.findById(petId)
+                .orElseThrow(() -> new ResourceNotFoundException("Pet not found with id: " + petId));
         pet.setActualVet(null);
         petsRepository.save(pet);
     }
@@ -111,7 +119,7 @@ public class PetsService {
     @Transactional
     public void updatePetAvatar(Long petId, MultipartFile avatar) throws IOException {
         Pet pet = petsRepository.findById(petId)
-                .orElseThrow(() -> new IllegalArgumentException("Pet not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Pet not found with id: " + petId));
         String contentType = avatar.getContentType();
         if (contentType == null || (!contentType.equals("image/png") && !contentType.equals("image/jpeg"))) {
             throw new IllegalArgumentException("Invalid file type. Only PNG and JPEG are allowed.");

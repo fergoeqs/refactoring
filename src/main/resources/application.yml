@@ -1,11 +1,14 @@
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/cursa4
-    username: eoeqs
-    password: eoeqs
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/cursa4}
+    username: ${SPRING_DATASOURCE_USERNAME:eoeqs}
+    password: ${SPRING_DATASOURCE_PASSWORD:eoeqs}
     driver-class-name: org.postgresql.Driver
     hikari:
       maximum-pool-size: 50
+      connection-timeout: 30000
+      initialization-fail-timeout: -1
+      connection-test-query: SELECT 1
   jpa:
     generate-ddl: true
     show-sql: false
@@ -14,12 +17,47 @@ spring:
     properties:
       hibernate:
         format_sql: true
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+    validate-on-migrate: false
+    connect-retries: 10
+    connect-retries-interval: 5
+
   jwt:
-    secret-key: "09d62fc50a9d8c09c3c3a82a3d5762cdfd85de199cb864b5378a77ff2c230159"
+    secret-key: "CX1i/FCo2MCTw8OoKj1XYt39hd4ZnLhkS1eKd/8sIwFZ"
     expiration: 360000000000
+  mail:
+    host: smtp.yandex.ru
+    port: 587
+    username: stmp@yandex.ru
+    password: 111
+    protocol: smtp
+    properties:
+      mail.smtp.auth: true
+      mail.smtp.starttls.enable: true
+      mail.smtp.ssl.trust: smtp.yandex.ru
+minio:
+  url: ${MINIO_URL:http://localhost:9000}
+  access:
+    name: ${MINIO_ACCESS_NAME:fergoeqs}
+    secret: ${MINIO_ACCESS_SECRET:fergoeqs123456789}
+    bucket:
+      name: vetcare
 
-
-#logging:
-#  level:
-#    org:
-#      springframework: trace
+logging:
+  level:
+    root: INFO
+    org.springframework.web: INFO
+    org.springframework.security: WARN
+    org.fergoeqs.coursework: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: /app/logs/application.log
+    max-size: 10MB
+    max-history: 30

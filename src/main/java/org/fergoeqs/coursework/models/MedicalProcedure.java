@@ -43,6 +43,5 @@ public class MedicalProcedure {
     @JoinColumn(name = "anamnesis_id")
     private Anamnesis anamnesis;
 
-    @NotNull
     private String reportUrl;
 }

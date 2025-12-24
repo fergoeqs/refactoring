@@ -1,6 +1,7 @@
 package org.fergoeqs.coursework.services;
 
 import org.fergoeqs.coursework.dto.AppointmentDTO;
+import org.fergoeqs.coursework.exception.ResourceNotFoundException;
 import org.fergoeqs.coursework.models.AppUser;
 import org.fergoeqs.coursework.models.Appointment;
 import org.fergoeqs.coursework.models.Slot;
@@ -44,7 +45,8 @@ public class AppointmentsService {
     }
 
     public Appointment findById(Long id) {
-        return appointmentsRepository.findById(id).orElse(null);
+        return appointmentsRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Appointment not found with id: " + id));
     }
 
     public List<Appointment> findAppointmentsWithoutAnamnesis() {
@@ -68,22 +70,26 @@ public class AppointmentsService {
 
     @Transactional
     public Appointment create(AppointmentDTO appointmentDTO) {
-        Pet pet = petsRepository.findById(appointmentDTO.petId()).orElse(null);
+        Pet pet = petsRepository.findById(appointmentDTO.petId())
+                .orElseThrow(() -> new ResourceNotFoundException("Pet not found with id: " + appointmentDTO.petId()));
         healthUpdatesService.saveWithAppointment(pet, appointmentDTO.description());
         return appointmentsRepository.save(appointmentMapper.appointmentDTOToAppointment(appointmentDTO));
     }
 
     @Transactional
     public Appointment update(Long appointmentId, Long slotId) {
-        Appointment appointment = appointmentsRepository.findById(appointmentId).orElse(null);
-        assert appointment != null;
-        appointment.setSlot(availableSlotsRepository.findById(slotId).orElse(null));
+        Appointment appointment = appointmentsRepository.findById(appointmentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Appointment not found with id: " + appointmentId));
+        Slot slot = availableSlotsRepository.findById(slotId)
+                .orElseThrow(() -> new ResourceNotFoundException("Slot not found with id: " + slotId));
+        appointment.setSlot(slot);
         return appointmentsRepository.save(appointment);
     }
 
     @Transactional
     public void delete(Long id, String reason) {
-        Appointment appointment = appointmentsRepository.findById(id).orElseThrow();
+        Appointment appointment = appointmentsRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Appointment not found with id: " + id));
         sendNotification(appointment, "Your appointment has been cancelled by vet cause: " + reason, false);
         appointmentsRepository.deleteById(id);
     }

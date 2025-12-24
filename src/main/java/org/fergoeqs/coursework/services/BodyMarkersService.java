@@ -1,6 +1,7 @@
 package org.fergoeqs.coursework.services;
 
 import org.fergoeqs.coursework.dto.BodyMarkerDTO;
+import org.fergoeqs.coursework.exception.ResourceNotFoundException;
 import org.fergoeqs.coursework.models.BodyMarker;
 import org.fergoeqs.coursework.repositories.BodyMarkersRepository;
 import org.fergoeqs.coursework.utils.Mappers.BodyMarkerMapper;
@@ -25,7 +26,8 @@ public class BodyMarkersService {
     }
 
     public BodyMarker findById(Long id) {
-        return bodyMarkersRepository.findById(id).orElse(null);
+        return bodyMarkersRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Body marker not found with id: " + id));
     }
 
     @Transactional
@@ -36,8 +38,8 @@ public class BodyMarkersService {
 
     @Transactional
     public BodyMarker update(Long id, BodyMarkerDTO bodyMarkerDTO) {
-        BodyMarker bodyMarker = bodyMarkersRepository.findById(id).orElse(null);
-        assert bodyMarker != null : "bodyMarker can't be null";
+        BodyMarker bodyMarker = bodyMarkersRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Body marker not found with id: " + id));
         bodyMarkerMapper.updateBodyMarkerFromDTO(bodyMarkerDTO, bodyMarker);
         return bodyMarkersRepository.save(setRelativeFields(bodyMarker, bodyMarkerDTO));
     }

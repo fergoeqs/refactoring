@@ -1,6 +1,7 @@
 package org.fergoeqs.coursework.services;
 
 import org.fergoeqs.coursework.dto.QuarantineDTO;
+import org.fergoeqs.coursework.exception.ResourceNotFoundException;
 import org.fergoeqs.coursework.models.AppUser;
 import org.fergoeqs.coursework.models.Quarantine;
 import org.fergoeqs.coursework.models.enums.QuarantineStatus;
@@ -33,7 +34,8 @@ public class QuarantineService {
     }
 
     public Quarantine findQuarantineById(Long id) {
-        return quarantineRepository.findById(id).orElse(null);
+        return quarantineRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Quarantine not found with id: " + id));
     }
 
     public List<Quarantine> findQuarantinesBySector(Long sectorId) {

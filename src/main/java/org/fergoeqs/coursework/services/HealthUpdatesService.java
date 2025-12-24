@@ -1,6 +1,7 @@
 package org.fergoeqs.coursework.services;
 
 import org.fergoeqs.coursework.dto.HealthUpdateDTO;
+import org.fergoeqs.coursework.exception.ResourceNotFoundException;
 import org.fergoeqs.coursework.models.HealthUpdate;
 import org.fergoeqs.coursework.models.Pet;
 import org.fergoeqs.coursework.repositories.HealthUpdatesRepository;
@@ -34,7 +35,8 @@ public class HealthUpdatesService {
     }
 
     public HealthUpdate findById(Long id) {
-        return healthUpdatesRepository.findById(id).orElse(null);
+        return healthUpdatesRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Health update not found with id: " + id));
     }
 
     @Transactional

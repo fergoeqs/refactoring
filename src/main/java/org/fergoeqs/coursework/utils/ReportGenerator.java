@@ -20,12 +20,27 @@ import java.util.stream.Collectors;
 @Component
 public class ReportGenerator {
     private final StorageService storageService;
-    File logoFile = new File(Objects.requireNonNull(getClass().getClassLoader().getResource("images/logo_min.png")).toURI());
-    File stampoFile = new File(Objects.requireNonNull(getClass().getClassLoader().getResource("images/stamp.png")).toURI());
-    File fontFile = new File(Objects.requireNonNull(getClass().getClassLoader().getResource("fonts/times_new_roman.ttf")).toURI());
+    private final byte[] logoBytes;
+    private final byte[] stampBytes;
+    private final byte[] fontBytes;
 
-    public ReportGenerator(StorageService storageService) throws URISyntaxException {
+    public ReportGenerator(StorageService storageService) throws IOException {
         this.storageService = storageService;
+        try (InputStream logoStream = Objects.requireNonNull(
+                getClass().getClassLoader().getResourceAsStream("images/logo_min.png"),
+                "Logo image not found")) {
+            this.logoBytes = logoStream.readAllBytes();
+        }
+        try (InputStream stampStream = Objects.requireNonNull(
+                getClass().getClassLoader().getResourceAsStream("images/stamp.png"),
+                "Stamp image not found")) {
+            this.stampBytes = stampStream.readAllBytes();
+        }
+        try (InputStream fontStream = Objects.requireNonNull(
+                getClass().getClassLoader().getResourceAsStream("fonts/times_new_roman.ttf"),
+                "Font file not found")) {
+            this.fontBytes = fontStream.readAllBytes();
+        }
     }
 
     public String generateProcedureReport(MedicalProcedure procedure) throws IOException, URISyntaxException {
@@ -36,10 +51,10 @@ public class ReportGenerator {
         PDPageContentStream contentStream = new PDPageContentStream(document, page);
         float maxWidth = page.getMediaBox().getWidth() - 60;
 
-        PDType0Font font = PDType0Font.load(document, fontFile);
+        PDType0Font font = PDType0Font.load(document, new ByteArrayInputStream(fontBytes));
 
-        PDImageXObject logo = PDImageXObject.createFromFile(logoFile.getAbsolutePath(), document);
-        PDImageXObject stamp = PDImageXObject.createFromFile(stampoFile.getAbsolutePath(), document);
+        PDImageXObject logo = PDImageXObject.createFromByteArray(document, logoBytes, "logo_min.png");
+        PDImageXObject stamp = PDImageXObject.createFromByteArray(document, stampBytes, "stamp.png");
 
 
         contentStream.drawImage(logo, 40, 700, 70, 70);
@@ -109,10 +124,10 @@ public class ReportGenerator {
         PDPageContentStream contentStream = new PDPageContentStream(document, page);
         float maxWidth = page.getMediaBox().getWidth() - 60;
 
-        PDType0Font font = PDType0Font.load(document, fontFile);
+        PDType0Font font = PDType0Font.load(document, new ByteArrayInputStream(fontBytes));
 
-        PDImageXObject logo = PDImageXObject.createFromFile(logoFile.getAbsolutePath(), document);
-        PDImageXObject stamp = PDImageXObject.createFromFile(stampoFile.getAbsolutePath(), document);
+        PDImageXObject logo = PDImageXObject.createFromByteArray(document, logoBytes, "logo_min.png");
+        PDImageXObject stamp = PDImageXObject.createFromByteArray(document, stampBytes, "stamp.png");
 
         contentStream.drawImage(logo, 40, 700, 70, 70);
         contentStream.beginText();

@@ -2,6 +2,7 @@ package org.fergoeqs.coursework.services;
 
 import org.apache.coyote.BadRequestException;
 import org.fergoeqs.coursework.dto.RatingAndReviewsDTO;
+import org.fergoeqs.coursework.exception.ResourceNotFoundException;
 import org.fergoeqs.coursework.models.AppUser;
 import org.fergoeqs.coursework.models.RatingAndReviews;
 import org.fergoeqs.coursework.repositories.RatingAndReviewsRepository;
@@ -26,7 +27,8 @@ public class RatingAndReviewsService {
     }
 
     public RatingAndReviews findById(Long id) {
-        return ratingAndReviewsRepository.findById(id).orElse(null);
+        return ratingAndReviewsRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Rating and review not found with id: " + id));
     }
 
     public List<RatingAndReviews> findAllByVetId(Long vetId) {
@@ -41,7 +43,8 @@ public class RatingAndReviewsService {
             throw new IllegalStateException("Veterinarian cannot leave reviews");
         }
         RatingAndReviews rr = rrMapper.fromDTO(ratingAndReviewsDTO);
-        rr.setVet(userService.findById(ratingAndReviewsDTO.vet()).orElse(null));
+        rr.setVet(userService.findById(ratingAndReviewsDTO.vet())
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + ratingAndReviewsDTO.vet())));
         rr.setOwner(owner);
         return ratingAndReviewsRepository.save(rr);
     }

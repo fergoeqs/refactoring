@@ -1,6 +1,7 @@
 package org.fergoeqs.coursework.services;
 
 import org.fergoeqs.coursework.dto.SectorDTO;
+import org.fergoeqs.coursework.exception.ResourceNotFoundException;
 import org.fergoeqs.coursework.models.Sector;
 import org.fergoeqs.coursework.models.enums.CategoryType;
 import org.fergoeqs.coursework.repositories.SectorsRepository;
@@ -22,7 +23,8 @@ public class SectorsService {
     }
 
     public Sector findSectorById(Long sectorId) {
-        return sectorsRepository.findById(sectorId).orElse(null);
+        return sectorsRepository.findById(sectorId)
+                .orElseThrow(() -> new ResourceNotFoundException("Sector not found with id: " + sectorId));
     }
 
     public List<Sector> findAllSectors() {

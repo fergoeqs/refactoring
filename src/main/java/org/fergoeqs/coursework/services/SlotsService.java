@@ -1,6 +1,7 @@
 package org.fergoeqs.coursework.services;
 
 import org.fergoeqs.coursework.dto.SlotDTO;
+import org.fergoeqs.coursework.exception.ResourceNotFoundException;
 import org.fergoeqs.coursework.models.AppUser;
 import org.fergoeqs.coursework.models.Slot;
 import org.fergoeqs.coursework.repositories.SlotsRepository;
@@ -31,11 +32,13 @@ public class SlotsService {
     }
 
     public Slot getSlotById(Long id) {
-        return slotsRepository.findById(id).orElse(null);
+        return slotsRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Slot not found with id: " + id));
     }
 
     public void addAvailableSlot(SlotDTO availableSlotDTO) {
-        AppUser vet = userService.findById(availableSlotDTO.vetId()).orElse(null);
+        AppUser vet = userService.findById(availableSlotDTO.vetId())
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + availableSlotDTO.vetId()));
         Slot availableSlot = new Slot();
         availableSlot.setDate(availableSlotDTO.date());
         availableSlot.setStartTime(availableSlotDTO.startTime());
@@ -50,11 +53,10 @@ public class SlotsService {
     }
 
     public void updateSlotStatus(Long id, Boolean isAvailable) {
-        Slot slot = slotsRepository.findById(id).orElse(null);
-        if (slot != null) {
-            slot.setIsAvailable(isAvailable);
-            slotsRepository.save(slot);
-        }
+        Slot slot = slotsRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Slot not found with id: " + id));
+        slot.setIsAvailable(isAvailable);
+        slotsRepository.save(slot);
     }
 
     public void deleteSlot(Long id) {

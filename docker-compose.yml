@@ -1,10 +1,12 @@
+version: '3.8'
+
 volumes:
   dev-db-volume: {}
+
 services:
-  dev-pg12:
-    container_name: dbpg4
-    hostname: lala4
-    image: bitnami/postgresql:17.2.0
+  postgres:
+    container_name: vetcare-postgres
+    image: bitnami/postgresql:latest
     environment:
       POSTGRESQL_DATABASE: cursa4
       POSTGRESQL_USERNAME: eoeqs
@@ -14,13 +16,18 @@ services:
     ports:
       - '5432:5432'
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U eoeqs"]
-      interval: 5s
+      test: ["CMD-SHELL", "pg_isready -U eoeqs -d cursa4"]
+      interval: 10s
       timeout: 5s
-      retries: 3
+      retries: 5
+      start_period: 15s
+    networks:
+      - app-network
+
   minio:
     container_name: minio-vetcare
-    image: bitnami/minio:2024
+    image: quay.io/minio/minio:latest
+    command: server /data --console-address ":9001"
     ports:
       - "9000:9000"
       - "9001:9001"
@@ -29,6 +36,80 @@ services:
       MINIO_ROOT_PASSWORD: fergoeqs123456789
     volumes:
       - ./minio-data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    networks:
+      - app-network
+
+  minio-setup:
+    image: minio/mc
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      sleep 5;
+      mc alias set miniovetcare http://minio:9000 fergoeqs fergoeqs123456789;
+      mc mb miniovetcare/vetcare || true;
+      mc mb miniovetcare/users || true;
+      mc mb miniovetcare/pets || true;
+      mc mb miniovetcare/attachment || true;
+      mc anonymous set public miniovetcare/vetcare;
+      mc anonymous set public miniovetcare/users;
+      mc anonymous set public miniovetcare/pets;
+      echo 'MinIO buckets created and configured';
+      "
+    networks:
+      - app-network
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: vetcare-backend
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/cursa4
+      SPRING_DATASOURCE_USERNAME: eoeqs
+      SPRING_DATASOURCE_PASSWORD: eoeqs
+      MINIO_URL: http://minio:9000
+      MINIO_ACCESS_NAME: fergoeqs
+      MINIO_ACCESS_SECRET: fergoeqs123456789
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8080/actuator/health || wget --no-verbose --tries=1 --spider http://localhost:8080/api/users/register || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 90s
+    networks:
+      - app-network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: vetcare-frontend
+    ports:
+      - "8081:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
     networks:
       - app-network
 
