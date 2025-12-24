@@ -77,17 +77,3 @@ BEGIN
     RETURN NULL;
 END;
 $$ LANGUAGE plpgsql;
-
--- (не оч нужна или заменить потом на isAvailable проверку)
-CREATE OR REPLACE FUNCTION check_sector_capacity()
-    RETURNS TRIGGER AS
-$$
-BEGIN
-    IF (SELECT COUNT(*) FROM pet WHERE sector_id = NEW.sector_id) >=
-       (SELECT capacity FROM sector WHERE id = NEW.sector_id) THEN
-        RAISE EXCEPTION 'Sector capacity exceeded.';
-    END IF;
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-

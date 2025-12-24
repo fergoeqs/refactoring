@@ -1,3 +1,4 @@
+DO $$
 BEGIN
     IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'pet') THEN
         CREATE INDEX IF NOT EXISTS idx_pet_owner_id ON pet(owner_id);
@@ -13,7 +14,6 @@ BEGIN
     IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'anamnesis') THEN
         CREATE INDEX IF NOT EXISTS idx_anamnesis_pet_id ON anamnesis(pet_id);
     END IF;
-
     IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'diagnosis') THEN
         CREATE INDEX IF NOT EXISTS idx_diagnosis_anamnesis_id ON diagnosis(anamnesis_id);
         CREATE INDEX IF NOT EXISTS idx_diagnosis_date ON diagnosis(date);
@@ -37,14 +37,9 @@ BEGIN
         CREATE INDEX IF NOT EXISTS idx_quarantine_pet_id ON quarantine(pet_id);
     END IF;
 
-    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'available_slots') THEN
-        CREATE INDEX IF NOT EXISTS idx_slot_vet_id ON available_slots(vet_id);
-    END IF;
-
     IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'App_User') THEN
         CREATE INDEX IF NOT EXISTS idx_user_clinic_id ON "App_User"(clinic_id);
     END IF;
-
     IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'notification') THEN
         CREATE INDEX IF NOT EXISTS idx_notification_app_user_id ON notification(app_user_id);
     END IF;

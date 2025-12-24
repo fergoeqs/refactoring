@@ -19,12 +19,3 @@ CREATE TRIGGER trigger_update_slot_availability
     AFTER INSERT OR DELETE ON appointment
     FOR EACH ROW
 EXECUTE FUNCTION update_slot_availability();
-
-
-DROP TRIGGER IF EXISTS trigger_check_sector_capacity ON pet;
-CREATE TRIGGER trigger_check_sector_capacity
-    BEFORE INSERT OR UPDATE
-    ON pet
-    FOR EACH ROW
-EXECUTE FUNCTION check_sector_capacity();
-
