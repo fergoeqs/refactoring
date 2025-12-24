@@ -26,7 +26,7 @@ spring:
     connect-retries-interval: 5
 
   jwt:
-    secret-key:
+    secret-key: "CX1i/FCo2MCTw8OoKj1XYt39hd4ZnLhkS1eKd/8sIwFZ"
     expiration: 360000000000
   mail:
     host: smtp.yandex.ru
@@ -46,7 +46,18 @@ minio:
     bucket:
       name: vetcare
 
-#logging:
-#  level:
-#    org:
-#      springframework: trace
+logging:
+  level:
+    root: INFO
+    org.springframework.web: INFO
+    org.springframework.security: WARN
+    org.fergoeqs.coursework: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: /app/logs/application.log
+    max-size: 10MB
+    max-history: 30
