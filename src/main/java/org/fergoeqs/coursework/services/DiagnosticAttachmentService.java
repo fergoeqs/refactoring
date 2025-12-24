@@ -1,6 +1,7 @@
 package org.fergoeqs.coursework.services;
 
 import org.fergoeqs.coursework.dto.DiagnosticAttachmentDTO;
+import org.fergoeqs.coursework.exception.ResourceNotFoundException;
 import org.fergoeqs.coursework.models.DiagnosticAttachment;
 import org.fergoeqs.coursework.repositories.DiagnosticAttachmentRepository;
 import org.fergoeqs.coursework.utils.Mappers.DiagnosticAttachmentMapper;
@@ -31,7 +32,8 @@ public class DiagnosticAttachmentService{
     }
 
     public DiagnosticAttachment findById(Long id) {
-        return diagnosticAttachmentRepository.findById(id).orElse(null);
+        return diagnosticAttachmentRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Diagnostic attachment not found with id: " + id));
     }
 
     public List<DiagnosticAttachment> findByAnamnesis(Long anamnesisId){
@@ -39,8 +41,9 @@ public class DiagnosticAttachmentService{
     }
 
     public String getAttachmentUrl(Long id) {
-        DiagnosticAttachment da = diagnosticAttachmentRepository.findById(id).orElse(null);
-        return (da != null ? da.getFileUrl() : null);
+        DiagnosticAttachment da = diagnosticAttachmentRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Diagnostic attachment not found with id: " + id));
+        return da.getFileUrl();
     }
 
     public DiagnosticAttachment save(DiagnosticAttachmentDTO daDTO, MultipartFile attachment) throws IOException {

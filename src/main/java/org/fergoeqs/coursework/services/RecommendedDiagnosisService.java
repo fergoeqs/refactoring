@@ -1,6 +1,7 @@
 package org.fergoeqs.coursework.services;
 
 import org.fergoeqs.coursework.dto.RecommendedDiagnosisDTO;
+import org.fergoeqs.coursework.exception.ResourceNotFoundException;
 import org.fergoeqs.coursework.models.RecommendedDiagnosis;
 import org.fergoeqs.coursework.models.Symptom;
 import org.fergoeqs.coursework.models.enums.BodyPart;
@@ -26,7 +27,8 @@ public class RecommendedDiagnosisService {
     }
 
     public RecommendedDiagnosis findById(Long id) {
-        return recommendedDiagnosisRepository.findById(id).orElse(null);
+        return recommendedDiagnosisRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Recommended diagnosis not found with id: " + id));
     }
 
     public List<RecommendedDiagnosis> findAll() {

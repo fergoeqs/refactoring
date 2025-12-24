@@ -2,6 +2,7 @@ package org.fergoeqs.coursework.services;
 
 import org.fergoeqs.coursework.dto.LoginUserDTO;
 import org.fergoeqs.coursework.dto.RegisterUserDTO;
+import org.fergoeqs.coursework.exception.ResourceNotFoundException;
 import org.fergoeqs.coursework.models.AppUser;
 import org.fergoeqs.coursework.models.enums.RoleType;
 import org.fergoeqs.coursework.repositories.UserRepository;
@@ -62,6 +63,6 @@ public class AuthenticationService {
         );
 
         return userRepository.findByUsername(input.username())
-                .orElseThrow();
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with username: " + input.username()));
     }
 }

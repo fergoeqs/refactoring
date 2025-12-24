@@ -1,6 +1,7 @@
 package org.fergoeqs.coursework.services;
 
 import org.fergoeqs.coursework.dto.ClinicDTO;
+import org.fergoeqs.coursework.exception.ResourceNotFoundException;
 import org.fergoeqs.coursework.models.Clinic;
 import org.fergoeqs.coursework.repositories.ClinicsRepository;
 import org.fergoeqs.coursework.utils.Mappers.ClinicMapper;
@@ -20,7 +21,8 @@ public class ClinicsService {
         this.clinicMapper = clinicMapper;
     }
     public Clinic findById(Long clinicId) {
-        return clinicsRepository.findById(clinicId).orElse(null);
+        return clinicsRepository.findById(clinicId)
+                .orElseThrow(() -> new ResourceNotFoundException("Clinic not found with id: " + clinicId));
     }
 
     public List<Clinic> findAll() {

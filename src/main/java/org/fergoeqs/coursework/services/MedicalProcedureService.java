@@ -1,6 +1,7 @@
 package org.fergoeqs.coursework.services;
 
 import org.fergoeqs.coursework.dto.MedicalProcedureDTO;
+import org.fergoeqs.coursework.exception.ResourceNotFoundException;
 import org.fergoeqs.coursework.models.MedicalProcedure;
 import org.fergoeqs.coursework.repositories.MedicalProcedureRepository;
 import org.fergoeqs.coursework.utils.Mappers.MedicalProcedureMapper;
@@ -34,7 +35,8 @@ public class MedicalProcedureService {
     }
 
     public MedicalProcedure findMedicalProcedureById(Long id) {
-        return medicalProcedureRepository.findById(id).orElse(null);
+        return medicalProcedureRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Medical procedure not found with id: " + id));
     }
 
     public List<MedicalProcedure> findByAnamnesis(Long anamnesisId) {
@@ -46,9 +48,9 @@ public class MedicalProcedureService {
     }
 
     public String getReportUrl(Long id) {
-        MedicalProcedure mp = medicalProcedureRepository.findById(id).orElse(null);
-        String url = (mp != null ? mp.getReportUrl() : null);
-        return reportGenerator.generateReportUrl(url);
+        MedicalProcedure mp = medicalProcedureRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Medical procedure not found with id: " + id));
+        return reportGenerator.generateReportUrl(mp.getReportUrl());
     }
 
 
@@ -66,7 +68,8 @@ public class MedicalProcedureService {
 
     private MedicalProcedure setRelativeFields(MedicalProcedure mp, MedicalProcedureDTO mpDTO) {
         mp.setAnamnesis(anamnesisService.findAnamnesisById(mpDTO.anamnesis()));
-        mp.setVet(userService.findById(mpDTO.vet()).orElse(null));
+        mp.setVet(userService.findById(mpDTO.vet())
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + mpDTO.vet())));
         mp.setPet(petsService.findPetById(mpDTO.pet()));
         return mp;
     }

@@ -1,6 +1,7 @@
 package org.fergoeqs.coursework.services;
 
 import org.fergoeqs.coursework.dto.SymptomDTO;
+import org.fergoeqs.coursework.exception.ResourceNotFoundException;
 import org.fergoeqs.coursework.models.RecommendedDiagnosis;
 import org.fergoeqs.coursework.models.Symptom;
 import org.fergoeqs.coursework.repositories.RecommendedDiagnosisRepository;
@@ -28,15 +29,14 @@ public class SymptomsService {
     }
 
     public Symptom findSymptomByName(String name) {
-        return symptomsRepository.findByName(name).orElse(null);
+        return symptomsRepository.findByName(name)
+                .orElseThrow(() -> new ResourceNotFoundException("Symptom not found with name: " + name));
     }
 
     public List<Symptom> findByDiagnosisId(Long diagnosisId) {
-        RecommendedDiagnosis recommendedDiagnosis = recDiagnosisRepository.findById(diagnosisId).orElse(null);
-        if (!(recommendedDiagnosis == null)) {
-            return  recommendedDiagnosis.getSymptoms();
-        }
-        else {return null;}
+        RecommendedDiagnosis recommendedDiagnosis = recDiagnosisRepository.findById(diagnosisId)
+                .orElseThrow(() -> new ResourceNotFoundException("Recommended diagnosis not found with id: " + diagnosisId));
+        return recommendedDiagnosis.getSymptoms();
     }
 
     public Symptom save(SymptomDTO symptomDTO) {
