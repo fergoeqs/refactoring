@@ -1,6 +1,7 @@
 package org.fergoeqs.coursework.services;
 
 import org.fergoeqs.coursework.dto.DiagnosisDTO;
+import org.fergoeqs.coursework.exception.ResourceNotFoundException;
 import org.fergoeqs.coursework.models.Diagnosis;
 import org.fergoeqs.coursework.models.RecommendedDiagnosis;
 import org.fergoeqs.coursework.models.Symptom;
@@ -34,7 +35,8 @@ public class DiagnosisService {
     }
 
     public Diagnosis getDiagnosisById(Long id) {
-        return diagnosisRepository.findById(id).orElse(null);
+        return diagnosisRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Diagnosis not found with id: " + id));
     }
 
     public List<Diagnosis> getDiagnosesByAnamnesisId(Long anamnesisId) {
@@ -46,7 +48,8 @@ public class DiagnosisService {
     }
 
     public Diagnosis getFirstByAnamnesisId(Long anamnesisId) {
-        return diagnosisRepository.findFirstByAnamnesisIdOrderByDateAsc(anamnesisId).orElse(null);
+        return diagnosisRepository.findFirstByAnamnesisIdOrderByDateAsc(anamnesisId)
+                .orElseThrow(() -> new ResourceNotFoundException("No diagnosis found for anamnesis with id: " + anamnesisId));
     }
 
     @Transactional
@@ -69,8 +72,8 @@ public class DiagnosisService {
 
     @Transactional
     public Diagnosis updateDiagnosis(Long id, DiagnosisDTO diagnosisDTO){
-        Diagnosis diagnosis = diagnosisRepository.findById(id).orElse(null);
-        if (diagnosis == null) return null;
+        Diagnosis diagnosis = diagnosisRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Diagnosis not found with id: " + id));
         diagnosisMapper.updateDiagnosisFromDTO(diagnosisDTO, diagnosis);
         return diagnosisRepository.save(diagnosis);
     }
@@ -78,7 +81,6 @@ public class DiagnosisService {
     @Transactional
     public Diagnosis RecommendedToClinical(Long rdId, Long anamnesisId){
         RecommendedDiagnosis rd = recommendedDiagnosisService.findById(rdId);
-        if (rd == null) return null;
         Diagnosis diagnosis = new Diagnosis();
         diagnosis.setName(rd.getName());
         diagnosis.setBodyPart(rd.getBodyPart());

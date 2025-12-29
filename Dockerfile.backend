@@ -1,0 +1,28 @@
+FROM gradle:8.5-jdk17 AS build
+
+WORKDIR /app
+
+COPY build.gradle settings.gradle ./
+COPY gradle ./gradle
+
+COPY src ./src
+
+RUN gradle clean build -x test --no-daemon
+
+FROM eclipse-temurin:17-jre-alpine
+
+WORKDIR /app
+
+RUN apk add --no-cache wget postgresql-client
+
+RUN mkdir -p /app/logs
+
+COPY --from=build /app/build/libs/*.jar app.jar
+
+EXPOSE 8080
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=90s --retries=3 \
+  CMD wget --no-verbose --tries=1 --spider http://localhost:8080/api/users/register || exit 1
+
+ENTRYPOINT ["java", "-jar", "-Dspring.profiles.active=prod", "app.jar"]
+

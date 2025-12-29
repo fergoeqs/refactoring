@@ -36,7 +36,12 @@ public class SecurityConfig {
         http
                 .cors(cors -> cors.configurationSource(request -> {
                     CorsConfiguration config = new CorsConfiguration();
-                    config.setAllowedOrigins(List.of("http://localhost:3000"));
+                    // Allow both localhost (for development) and frontend container (for Docker)
+                    config.setAllowedOrigins(List.of(
+                            "http://localhost:8081",
+                            "http://frontend:80",
+                            "http://frontend"
+                    ));
                     config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
                     config.setAllowedHeaders(List.of("*"));
                     config.setAllowCredentials(true);

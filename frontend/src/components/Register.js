@@ -66,7 +66,8 @@ const Register = () => {
             setError('');
             setSuccessMessage('');
             try {
-                const response = await axios.post('http://localhost:8080/api/users/register', formData);
+                const apiUrl = process.env.REACT_APP_API_URL || "/api";
+                const response = await axios.post(`${apiUrl}/users/register`, formData);
                 setSuccessMessage('Registration successful! You can now log in.');
             } catch (error) {
                 if (error.response) {

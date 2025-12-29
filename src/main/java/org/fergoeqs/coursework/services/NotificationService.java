@@ -1,4 +1,5 @@
 package org.fergoeqs.coursework.services;
+import org.fergoeqs.coursework.exception.ResourceNotFoundException;
 import org.fergoeqs.coursework.models.Notification;
 import org.fergoeqs.coursework.repositories.NotificationRepository;
 import org.springframework.mail.SimpleMailMessage;
@@ -24,7 +25,8 @@ public class NotificationService {
     }
 
     public Notification findById(Long id) {
-        return notificationRepository.findById(id).orElse(null);
+        return notificationRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Notification not found with id: " + id));
     }
 
     public List<Notification> findAllByUserId(Long userId) {
@@ -48,7 +50,8 @@ public class NotificationService {
         sendWebNotificationToUser(userId.toString(), message);
         sendEmailNotification(email, "VetCare", message);
         Notification notification = new Notification();
-        notification.setAppUser(userService.findById(userId).orElse(null));
+        notification.setAppUser(userService.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId)));
         notification.setContent(message);
         notificationRepository.save(notification);
     }
