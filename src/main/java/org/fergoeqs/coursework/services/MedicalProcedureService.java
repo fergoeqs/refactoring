@@ -15,6 +15,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
+@Transactional(readOnly = true)
 public class MedicalProcedureService {
     private final MedicalProcedureRepository medicalProcedureRepository;
     private final AnamnesisService anamnesisService;
@@ -54,6 +55,7 @@ public class MedicalProcedureService {
     }
 
 
+    @Transactional
     public MedicalProcedure save(MedicalProcedureDTO mpDTO) throws IOException, URISyntaxException {
         MedicalProcedure mp = setRelativeFields(mpMapper.fromDTO(mpDTO), mpDTO);
 

@@ -12,6 +12,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -35,6 +36,7 @@ public class AuthenticationService {
         this.passwordEncoder = passwordEncoder;
     }
 
+    @Transactional
     public AppUser signup(RegisterUserDTO input) {
         AppUser user = new AppUser();
         user.setUsername(input.username());

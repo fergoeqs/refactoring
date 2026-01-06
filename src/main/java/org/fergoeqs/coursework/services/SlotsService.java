@@ -2,13 +2,17 @@ package org.fergoeqs.coursework.services;
 
 import org.fergoeqs.coursework.dto.SlotDTO;
 import org.fergoeqs.coursework.exception.ResourceNotFoundException;
+import org.fergoeqs.coursework.exception.ValidationException;
 import org.fergoeqs.coursework.models.AppUser;
 import org.fergoeqs.coursework.models.Slot;
 import org.fergoeqs.coursework.repositories.SlotsRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import java.util.List;
 
 @Service
+@Transactional(readOnly = true)
 public class SlotsService {
 
     private final SlotsRepository slotsRepository;
@@ -36,6 +40,7 @@ public class SlotsService {
                 .orElseThrow(() -> new ResourceNotFoundException("Slot not found with id: " + id));
     }
 
+    @Transactional
     public void addAvailableSlot(SlotDTO availableSlotDTO) {
         AppUser vet = userService.findById(availableSlotDTO.vetId())
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + availableSlotDTO.vetId()));
@@ -47,11 +52,12 @@ public class SlotsService {
         availableSlot.setIsAvailable(true);
         availableSlot.setIsPriority(availableSlotDTO.isPriority());
         if (!availableSlot.getStartTime().isBefore(availableSlot.getEndTime())) {
-            throw new IllegalArgumentException("Start time must be before end time");
+            throw new ValidationException("Start time must be before end time");
         }
         slotsRepository.save(availableSlot);
     }
 
+    @Transactional
     public void updateSlotStatus(Long id, Boolean isAvailable) {
         Slot slot = slotsRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Slot not found with id: " + id));
@@ -59,6 +65,7 @@ public class SlotsService {
         slotsRepository.save(slot);
     }
 
+    @Transactional
     public void deleteSlot(Long id) {
         slotsRepository.deleteById(id);
     }

@@ -6,10 +6,12 @@ import org.fergoeqs.coursework.models.Treatment;
 import org.fergoeqs.coursework.repositories.TreatmentRepository;
 import org.fergoeqs.coursework.utils.Mappers.TreatmentMapper;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 @Service
+@Transactional(readOnly = true)
 public class TreatmentService {
     private final TreatmentRepository treatmentRepository;
     private final TreatmentMapper treatmentMapper;
@@ -37,10 +39,12 @@ public class TreatmentService {
         return treatmentRepository.findAllByPetId(petId);
     }
 
+    @Transactional
     public Treatment save(TreatmentDTO treatmentDTO) {
         return treatmentRepository.save(setRelativeFields(treatmentMapper.fromDTO(treatmentDTO), treatmentDTO));
     }
 
+    @Transactional
     public Treatment update(TreatmentDTO treatmentDTO, Long id) {
         Treatment treatment = treatmentRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Treatment not found with id: " + id));
@@ -48,6 +52,7 @@ public class TreatmentService {
         return treatmentRepository.save(setRelativeFields(treatment, treatmentDTO));
     }
 
+    @Transactional
     public Treatment completeTreatment(Long id) {
         Treatment treatment = treatmentRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Treatment not found with id: " + id));
@@ -55,6 +60,7 @@ public class TreatmentService {
         return treatmentRepository.save(treatment);
     }
 
+    @Transactional
     public void deleteTreatmentById(Long id) {
         treatmentRepository.deleteById(id);
     }

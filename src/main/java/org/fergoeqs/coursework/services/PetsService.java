@@ -1,7 +1,9 @@
 package org.fergoeqs.coursework.services;
 
 import org.fergoeqs.coursework.dto.PetDTO;
+import org.fergoeqs.coursework.exception.BusinessException;
 import org.fergoeqs.coursework.exception.ResourceNotFoundException;
+import org.fergoeqs.coursework.exception.ValidationException;
 import org.fergoeqs.coursework.models.AppUser;
 import org.fergoeqs.coursework.models.Pet;
 import org.fergoeqs.coursework.models.enums.RoleType;
@@ -63,8 +65,8 @@ public class PetsService {
     public Pet updatePet(Long petId, AppUser author, PetDTO petDTO) {
         Pet pet = petsRepository.findById(petId)
                 .orElseThrow(() -> new ResourceNotFoundException("Pet not found with id: " + petId));
-        if (!(pet.getOwner()!= null && pet.getOwner().equals(author)) && !isAdmin(author) && !isVet(author) ) {
-            throw new IllegalArgumentException("User is not allowed to update this pet (only for owner, vet or admin)");
+        if (!(pet.getOwner() != null && pet.getOwner().equals(author)) && !isAdmin(author) && !isVet(author)) {
+            throw new BusinessException("User is not allowed to update this pet (only for owner, vet or admin)");
         }
         petMapper.updatePetFromDTO(petDTO, pet);
         return petsRepository.save(pet);
@@ -74,8 +76,8 @@ public class PetsService {
     public void deletePet(Long petId, AppUser deleter) {
         Pet pet = petsRepository.findById(petId)
                 .orElseThrow(() -> new ResourceNotFoundException("Pet not found with id: " + petId));
-        if (!(isAdmin(deleter) && !isVet(deleter))) {
-            throw new IllegalArgumentException("User is not allowed to delete pets");
+        if (!(isAdmin(deleter) || isVet(deleter))) {
+            throw new BusinessException("User is not allowed to delete pets");
         }
         petsRepository.delete(pet);
     }
@@ -102,7 +104,7 @@ public class PetsService {
         Pet pet = petsRepository.findById(petId)
                 .orElseThrow(() -> new ResourceNotFoundException("Pet not found with id: " + petId));
         if (!isVet(vet)) {
-            throw new IllegalArgumentException("User is not allowed to bind pets");
+            throw new BusinessException("User is not allowed to bind pets");
         }
         pet.setActualVet(vet);
         petsRepository.save(pet);
@@ -122,7 +124,7 @@ public class PetsService {
                 .orElseThrow(() -> new ResourceNotFoundException("Pet not found with id: " + petId));
         String contentType = avatar.getContentType();
         if (contentType == null || (!contentType.equals("image/png") && !contentType.equals("image/jpeg"))) {
-            throw new IllegalArgumentException("Invalid file type. Only PNG and JPEG are allowed.");
+            throw new ValidationException("Invalid file type. Only PNG and JPEG are allowed.");
         }
         String objectName = "avatar/" + petId;
         storageService.uploadFile("pets", objectName, avatar.getInputStream(), contentType);

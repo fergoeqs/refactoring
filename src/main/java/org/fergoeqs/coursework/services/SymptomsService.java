@@ -7,11 +7,15 @@ import org.fergoeqs.coursework.models.Symptom;
 import org.fergoeqs.coursework.repositories.RecommendedDiagnosisRepository;
 import org.fergoeqs.coursework.repositories.SymptomsRepository;
 import org.fergoeqs.coursework.utils.Mappers.SymptomMapper;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 @Service
+@Transactional(readOnly = true)
 public class SymptomsService {
     private final SymptomsRepository symptomsRepository;
     private final SymptomMapper symptomMapper;
@@ -24,6 +28,7 @@ public class SymptomsService {
         this.recDiagnosisRepository = recommendedDiagnosisRepository;
     }
 
+    @Cacheable(value = "allSymptoms")
     public List<Symptom> findAllSymptoms() {
         return symptomsRepository.findAll();
     }
@@ -39,6 +44,8 @@ public class SymptomsService {
         return recommendedDiagnosis.getSymptoms();
     }
 
+    @Transactional
+    @CacheEvict(value = "allSymptoms", allEntries = true)
     public Symptom save(SymptomDTO symptomDTO) {
         return symptomsRepository.save(symptomMapper.fromDTO(symptomDTO));
     }

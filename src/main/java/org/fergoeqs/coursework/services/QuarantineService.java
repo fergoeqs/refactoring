@@ -2,6 +2,7 @@ package org.fergoeqs.coursework.services;
 
 import org.fergoeqs.coursework.dto.QuarantineDTO;
 import org.fergoeqs.coursework.exception.ResourceNotFoundException;
+import org.fergoeqs.coursework.exception.ValidationException;
 import org.fergoeqs.coursework.models.AppUser;
 import org.fergoeqs.coursework.models.Quarantine;
 import org.fergoeqs.coursework.models.enums.QuarantineStatus;
@@ -12,11 +13,13 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
+@Transactional(readOnly = true)
 public class QuarantineService {
     private final QuarantineRepository quarantineRepository;
     private final SectorsService sectorsService;
@@ -59,16 +62,18 @@ public class QuarantineService {
         return quarantineRepository.findDistinctReasonsByCurrentStatus(sectorId);
     }
 
+    @Transactional
     public Quarantine save(QuarantineDTO quarantineDTO, AppUser appUser) {
         Quarantine quarantine = quarantineMapper.fromDTO(quarantineDTO);
         if (quarantine.getStartDate().isAfter(quarantine.getEndDate())) {
-            throw new IllegalArgumentException("Start date must be before end date");
+            throw new ValidationException("Start date must be before end date");
         }
         quarantine.setVet(appUser);
         quarantine.setStatus(QuarantineStatus.CURRENT);
         return quarantineRepository.save(setRelativeFields(quarantine, quarantineDTO));
     }
 
+    @Transactional
     public void deleteQuarantineById(Long id) {
         quarantineRepository.deleteById(id);
     }
