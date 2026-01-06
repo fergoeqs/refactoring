@@ -16,8 +16,6 @@ import org.fergoeqs.coursework.services.PetsService;
 import org.fergoeqs.coursework.services.UserService;
 import org.fergoeqs.coursework.utils.Mappers.AnamnesisMapper;
 import org.fergoeqs.coursework.utils.SecurityUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -30,7 +28,6 @@ public class AnamnesisController {
     private final AnamnesisMapper anamnesisMapper;
     private final UserService userService;
     private final PetsService petsService;
-    private static final Logger logger = LoggerFactory.getLogger(AnamnesisController.class);
 
     public AnamnesisController(AnamnesisService anamnesisService, AnamnesisMapper anamnesisMapper, 
                                 UserService userService, PetsService petsService) {
@@ -51,30 +48,20 @@ public class AnamnesisController {
     @SecurityRequirement(name = "Bearer Authentication")
     @GetMapping("/{id}")
     public ResponseEntity<?> getAnamnesis(@Parameter(description = "ID анамнеза") @PathVariable Long id) throws BadRequestException {
-        try {
-            Anamnesis anamnesis = anamnesisService.findAnamnesisById(id);
-            org.fergoeqs.coursework.models.AppUser currentUser = userService.getAuthenticatedUser();
-            if (anamnesis.getPet() != null) {
-                SecurityUtils.checkResourceAccessThroughPet(currentUser, anamnesis.getPet(), false);
-            }
-            return ResponseEntity.ok(anamnesisMapper.toDTO(anamnesis));
-        } catch (Exception e) {
-            logger.error("Error getting anamnesis", e);
-            throw e;
+        Anamnesis anamnesis = anamnesisService.findAnamnesisById(id);
+        org.fergoeqs.coursework.models.AppUser currentUser = userService.getAuthenticatedUser();
+        if (anamnesis.getPet() != null) {
+            SecurityUtils.checkResourceAccessThroughPet(currentUser, anamnesis.getPet(), false);
         }
+        return ResponseEntity.ok(anamnesisMapper.toDTO(anamnesis));
     }
 
     @GetMapping("/all-by-patient/{petId}")
     public ResponseEntity<?> getAllByPatient(@PathVariable Long petId) throws BadRequestException {
-        try {
-            org.fergoeqs.coursework.models.Pet pet = petsService.findPetById(petId);
-            org.fergoeqs.coursework.models.AppUser currentUser = userService.getAuthenticatedUser();
-            SecurityUtils.checkResourceAccessThroughPet(currentUser, pet, false);
-            return ResponseEntity.ok(anamnesisMapper.toDTOs(anamnesisService.findAllAnamnesesByPet(petId)));
-        } catch (Exception e) {
-            logger.error("Error getting anamnesis by patient", e);
-            throw e;
-        }
+        org.fergoeqs.coursework.models.Pet pet = petsService.findPetById(petId);
+        org.fergoeqs.coursework.models.AppUser currentUser = userService.getAuthenticatedUser();
+        SecurityUtils.checkResourceAccessThroughPet(currentUser, pet, false);
+        return ResponseEntity.ok(anamnesisMapper.toDTOs(anamnesisService.findAllAnamnesesByPet(petId)));
     }
 
     @Operation(summary = "Сохранить анамнез", description = "Создает новый анамнез (только для ветеринаров и администраторов)")
@@ -87,13 +74,8 @@ public class AnamnesisController {
     @SecurityRequirement(name = "Bearer Authentication")
     @PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_VET')")
     @PostMapping("/save")
-    public ResponseEntity<?> saveAnamnesis(@RequestBody AnamnesisDTO anamnesisDTO) {
-        try {
-            return ResponseEntity.ok(anamnesisMapper.toDTO(anamnesisService.saveAnamnesis(anamnesisDTO)));
-        } catch (Exception e) {
-            logger.error("Error saving anamnesis", e);
-            throw e;
-        }
+    public ResponseEntity<?> saveAnamnesis(@RequestBody AnamnesisDTO anamnesisDTO) throws BadRequestException {
+        return ResponseEntity.ok(anamnesisMapper.toDTO(anamnesisService.saveAnamnesis(anamnesisDTO)));
     }
 
 }

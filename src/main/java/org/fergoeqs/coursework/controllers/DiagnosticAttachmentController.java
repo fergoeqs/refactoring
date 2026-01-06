@@ -9,8 +9,6 @@ import org.fergoeqs.coursework.services.DiagnosticAttachmentService;
 import org.fergoeqs.coursework.services.UserService;
 import org.fergoeqs.coursework.utils.Mappers.DiagnosticAttachmentMapper;
 import org.fergoeqs.coursework.utils.SecurityUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -27,7 +25,6 @@ public class DiagnosticAttachmentController {
     private final DiagnosticAttachmentMapper diagnosticAttachmentMapper;
     private final UserService userService;
     private final AnamnesisService anamnesisService;
-    private static final Logger logger = LoggerFactory.getLogger(DiagnosticAttachmentController.class);
 
     public DiagnosticAttachmentController(DiagnosticAttachmentService diagnosticAttachmentService, DiagnosticAttachmentMapper diagnosticAttachmentMapper,
                                           UserService userService, AnamnesisService anamnesisService) {
@@ -39,62 +36,42 @@ public class DiagnosticAttachmentController {
 
     @GetMapping("/all-by-anamnesis/{anamnesisId}")
     public ResponseEntity<?> getAllAttachmentsByAnamnesis(@PathVariable Long anamnesisId) throws BadRequestException {
-        try {
-            org.fergoeqs.coursework.models.Anamnesis anamnesis = anamnesisService.findAnamnesisById(anamnesisId);
-            org.fergoeqs.coursework.models.AppUser currentUser = userService.getAuthenticatedUser();
-            if (anamnesis.getPet() != null) {
-                SecurityUtils.checkResourceAccessThroughPet(currentUser, anamnesis.getPet(), false);
-            }
-            return ResponseEntity.ok(diagnosticAttachmentMapper.toDTOs(
-                    diagnosticAttachmentService.findByAnamnesis(anamnesisId)));
-        } catch (Exception e) {
-            logger.error("Error getting diagnostic attachments by anamnesis");
-            throw e;
+        org.fergoeqs.coursework.models.Anamnesis anamnesis = anamnesisService.findAnamnesisById(anamnesisId);
+        org.fergoeqs.coursework.models.AppUser currentUser = userService.getAuthenticatedUser();
+        if (anamnesis.getPet() != null) {
+            SecurityUtils.checkResourceAccessThroughPet(currentUser, anamnesis.getPet(), false);
         }
+        return ResponseEntity.ok(diagnosticAttachmentMapper.toDTOs(
+                diagnosticAttachmentService.findByAnamnesis(anamnesisId)));
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<?> getAttachment(@PathVariable Long id) throws BadRequestException {
-        try {
-            DiagnosticAttachment attachment = diagnosticAttachmentService.findById(id);
-            org.fergoeqs.coursework.models.AppUser currentUser = userService.getAuthenticatedUser();
-            if (attachment.getAnamnesis() != null && attachment.getAnamnesis().getPet() != null) {
-                SecurityUtils.checkResourceAccessThroughPet(currentUser, attachment.getAnamnesis().getPet(), false);
-            }
-            return ResponseEntity.ok(diagnosticAttachmentMapper.toDTO(attachment));
-        } catch (Exception e) {
-            logger.error("Error getting diagnostic attachment");
-            throw e;
+        DiagnosticAttachment attachment = diagnosticAttachmentService.findById(id);
+        org.fergoeqs.coursework.models.AppUser currentUser = userService.getAuthenticatedUser();
+        if (attachment.getAnamnesis() != null && attachment.getAnamnesis().getPet() != null) {
+            SecurityUtils.checkResourceAccessThroughPet(currentUser, attachment.getAnamnesis().getPet(), false);
         }
+        return ResponseEntity.ok(diagnosticAttachmentMapper.toDTO(attachment));
     }
 
     @GetMapping("/url/{id}")
     public ResponseEntity<?> getAttachmentUrl(@PathVariable Long id) throws BadRequestException {
-        try {
-            DiagnosticAttachment attachment = diagnosticAttachmentService.findById(id);
-            org.fergoeqs.coursework.models.AppUser currentUser = userService.getAuthenticatedUser();
-            if (attachment.getAnamnesis() != null && attachment.getAnamnesis().getPet() != null) {
-                SecurityUtils.checkResourceAccessThroughPet(currentUser, attachment.getAnamnesis().getPet(), false);
-            }
-            return ResponseEntity.ok(diagnosticAttachmentService.getAttachmentUrl(id));
-        } catch (Exception e) {
-            logger.error("Error getting diagnostic attachment url");
-            throw e;
+        DiagnosticAttachment attachment = diagnosticAttachmentService.findById(id);
+        org.fergoeqs.coursework.models.AppUser currentUser = userService.getAuthenticatedUser();
+        if (attachment.getAnamnesis() != null && attachment.getAnamnesis().getPet() != null) {
+            SecurityUtils.checkResourceAccessThroughPet(currentUser, attachment.getAnamnesis().getPet(), false);
         }
+        return ResponseEntity.ok(diagnosticAttachmentService.getAttachmentUrl(id));
     }
 
     @PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_VET')")
     @PostMapping("/new")
     public ResponseEntity<?> saveAttachment(@RequestParam("diagnosticAttachmentDTO") String diagnosticAttachmentDTOJson,
-                                            @RequestParam("file") MultipartFile file) throws IOException {
-        try {
-            ObjectMapper objectMapper = new ObjectMapper();
-            DiagnosticAttachmentDTO diagnosticAttachmentDTO = objectMapper.readValue(diagnosticAttachmentDTOJson, DiagnosticAttachmentDTO.class);
-            return ResponseEntity.ok(diagnosticAttachmentMapper.toDTO(diagnosticAttachmentService.save(diagnosticAttachmentDTO, file)));
-        } catch (Exception e) {
-            logger.error("Error saving diagnostic attachment", e);
-            throw e;
-        }
+                                            @RequestParam("file") MultipartFile file) throws IOException, BadRequestException {
+        ObjectMapper objectMapper = new ObjectMapper();
+        DiagnosticAttachmentDTO diagnosticAttachmentDTO = objectMapper.readValue(diagnosticAttachmentDTOJson, DiagnosticAttachmentDTO.class);
+        return ResponseEntity.ok(diagnosticAttachmentMapper.toDTO(diagnosticAttachmentService.save(diagnosticAttachmentDTO, file)));
     }
 
 }
