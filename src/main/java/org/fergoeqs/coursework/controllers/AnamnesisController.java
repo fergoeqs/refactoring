@@ -8,9 +8,14 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.apache.coyote.BadRequestException;
 import org.fergoeqs.coursework.dto.AnamnesisDTO;
+import org.fergoeqs.coursework.models.Anamnesis;
 import org.fergoeqs.coursework.services.AnamnesisService;
+import org.fergoeqs.coursework.services.PetsService;
+import org.fergoeqs.coursework.services.UserService;
 import org.fergoeqs.coursework.utils.Mappers.AnamnesisMapper;
+import org.fergoeqs.coursework.utils.SecurityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
@@ -23,11 +28,16 @@ import org.springframework.web.bind.annotation.*;
 public class AnamnesisController {
     private final AnamnesisService anamnesisService;
     private final AnamnesisMapper anamnesisMapper;
+    private final UserService userService;
+    private final PetsService petsService;
     private static final Logger logger = LoggerFactory.getLogger(AnamnesisController.class);
 
-    public AnamnesisController(AnamnesisService anamnesisService, AnamnesisMapper anamnesisMapper) {
+    public AnamnesisController(AnamnesisService anamnesisService, AnamnesisMapper anamnesisMapper, 
+                                UserService userService, PetsService petsService) {
         this.anamnesisService = anamnesisService;
         this.anamnesisMapper = anamnesisMapper;
+        this.userService = userService;
+        this.petsService = petsService;
     }
 
 
@@ -35,13 +45,19 @@ public class AnamnesisController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Анамнез найден",
                     content = @Content(schema = @Schema(implementation = AnamnesisDTO.class))),
-            @ApiResponse(responseCode = "404", description = "Анамнез не найден")
+            @ApiResponse(responseCode = "404", description = "Анамнез не найден"),
+            @ApiResponse(responseCode = "403", description = "Доступ запрещен")
     })
     @SecurityRequirement(name = "Bearer Authentication")
     @GetMapping("/{id}")
-    public ResponseEntity<?> getAnamnesis(@Parameter(description = "ID анамнеза") @PathVariable Long id) {
+    public ResponseEntity<?> getAnamnesis(@Parameter(description = "ID анамнеза") @PathVariable Long id) throws BadRequestException {
         try {
-            return ResponseEntity.ok(anamnesisMapper.toDTO(anamnesisService.findAnamnesisById(id)));
+            Anamnesis anamnesis = anamnesisService.findAnamnesisById(id);
+            org.fergoeqs.coursework.models.AppUser currentUser = userService.getAuthenticatedUser();
+            if (anamnesis.getPet() != null) {
+                SecurityUtils.checkResourceAccessThroughPet(currentUser, anamnesis.getPet(), false);
+            }
+            return ResponseEntity.ok(anamnesisMapper.toDTO(anamnesis));
         } catch (Exception e) {
             logger.error("Error getting anamnesis", e);
             throw e;
@@ -49,8 +65,11 @@ public class AnamnesisController {
     }
 
     @GetMapping("/all-by-patient/{petId}")
-    public ResponseEntity<?> getAllByPatient(@PathVariable Long petId) {
+    public ResponseEntity<?> getAllByPatient(@PathVariable Long petId) throws BadRequestException {
         try {
+            org.fergoeqs.coursework.models.Pet pet = petsService.findPetById(petId);
+            org.fergoeqs.coursework.models.AppUser currentUser = userService.getAuthenticatedUser();
+            SecurityUtils.checkResourceAccessThroughPet(currentUser, pet, false);
             return ResponseEntity.ok(anamnesisMapper.toDTOs(anamnesisService.findAllAnamnesesByPet(petId)));
         } catch (Exception e) {
             logger.error("Error getting anamnesis by patient", e);

@@ -83,6 +83,7 @@ public class SlotsController {
         }
     }
 
+    @PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_VET') or hasRole('ROLE_OWNER')")
     @PutMapping("book-slot/{id}")
     public ResponseEntity<?> bookSlot(@PathVariable Long id) {
         try {
@@ -94,6 +95,7 @@ public class SlotsController {
         }
     }
 
+    @PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_VET')")
     @PutMapping("release-slot/{id}")
     public ResponseEntity<?> releaseSlot(@PathVariable Long id) {
         try {

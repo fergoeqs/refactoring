@@ -10,11 +10,13 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.apache.coyote.BadRequestException;
 import org.fergoeqs.coursework.dto.PetDTO;
+import org.fergoeqs.coursework.models.AppUser;
 import org.fergoeqs.coursework.models.Pet;
 import org.fergoeqs.coursework.services.PetsService;
 import org.fergoeqs.coursework.services.UserService;
 import org.fergoeqs.coursework.utils.Mappers.AppUserMapper;
 import org.fergoeqs.coursework.utils.Mappers.PetMapper;
+import org.fergoeqs.coursework.utils.SecurityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
@@ -66,13 +68,17 @@ public class PetsController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Питомец найден",
                     content = @Content(schema = @Schema(implementation = PetDTO.class))),
-            @ApiResponse(responseCode = "404", description = "Питомец не найден")
+            @ApiResponse(responseCode = "404", description = "Питомец не найден"),
+            @ApiResponse(responseCode = "403", description = "Доступ запрещен")
     })
     @SecurityRequirement(name = "Bearer Authentication")
     @GetMapping("/pet/{petId}")
-    public ResponseEntity<?> getPet(@Parameter(description = "ID питомца") @PathVariable Long petId) {
+    public ResponseEntity<?> getPet(@Parameter(description = "ID питомца") @PathVariable Long petId) throws BadRequestException {
         try {
-            return ResponseEntity.ok(petMapper.petToPetDTO(petsService.findPetById(petId)));
+            Pet pet = petsService.findPetById(petId);
+            AppUser currentUser = userService.getAuthenticatedUser();
+            SecurityUtils.checkPetAccess(currentUser, pet, false);
+            return ResponseEntity.ok(petMapper.petToPetDTO(pet));
         } catch (Exception e) {
             logger.error("Pet fetching failed: {}", e.getMessage());
             throw e;
@@ -141,6 +147,7 @@ public class PetsController {
             @ApiResponse(responseCode = "200", description = "Питомец успешно обновлен",
                     content = @Content(schema = @Schema(implementation = PetDTO.class))),
             @ApiResponse(responseCode = "404", description = "Питомец не найден"),
+            @ApiResponse(responseCode = "403", description = "Доступ запрещен"),
             @ApiResponse(responseCode = "401", description = "Не авторизован")
     })
     @SecurityRequirement(name = "Bearer Authentication")
@@ -148,8 +155,11 @@ public class PetsController {
     public ResponseEntity<?> updatePet(@RequestBody PetDTO petDTO,
                                        @Parameter(description = "ID питомца") @PathVariable Long petId) throws BadRequestException {
         try {
-            petsService.updatePet(petId, userService.getAuthenticatedUser(), petDTO);
-            return ResponseEntity.ok(petMapper.petToPetDTO(petsService.updatePet(petId, userService.getAuthenticatedUser(), petDTO)));
+            Pet pet = petsService.findPetById(petId);
+            AppUser currentUser = userService.getAuthenticatedUser();
+            SecurityUtils.checkPetAccess(currentUser, pet, true);
+            Pet updatedPet = petsService.updatePet(petId, currentUser, petDTO);
+            return ResponseEntity.ok(petMapper.petToPetDTO(updatedPet));
         } catch (Exception e) {
             logger.error("Pet updating failed: {}", e.getMessage());
             throw e;

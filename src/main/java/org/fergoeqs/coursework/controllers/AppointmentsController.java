@@ -1,12 +1,13 @@
 package org.fergoeqs.coursework.controllers;
 
-
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.apache.coyote.BadRequestException;
 import org.fergoeqs.coursework.dto.AppointmentDTO;
 import org.fergoeqs.coursework.models.Appointment;
 import org.fergoeqs.coursework.services.AppointmentsService;
+import org.fergoeqs.coursework.services.UserService;
 import org.fergoeqs.coursework.utils.Mappers.AppointmentMapper;
+import org.fergoeqs.coursework.utils.SecurityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
@@ -22,17 +23,22 @@ public class AppointmentsController {
 
     private final AppointmentsService appointmentsService;
     private final AppointmentMapper appointmentMapper;
+    private final UserService userService;
     private static final Logger logger = LoggerFactory.getLogger(AppointmentsController.class);
 
-    public AppointmentsController(AppointmentsService appointmentsService, AppointmentMapper appointmentMapper) {
+    public AppointmentsController(AppointmentsService appointmentsService, AppointmentMapper appointmentMapper, UserService userService) {
         this.appointmentsService = appointmentsService;
         this.appointmentMapper = appointmentMapper;
+        this.userService = userService;
     }
 
     @GetMapping("/appointment/{id}")
-    public ResponseEntity<?> getAppointment(@PathVariable Long id) {
+    public ResponseEntity<?> getAppointment(@PathVariable Long id) throws BadRequestException {
         try {
-            return ResponseEntity.ok(appointmentMapper.appointmentToAppointmentDTO(appointmentsService.findById(id)));
+            Appointment appointment = appointmentsService.findById(id);
+            org.fergoeqs.coursework.models.AppUser currentUser = userService.getAuthenticatedUser();
+            SecurityUtils.checkAppointmentAccess(currentUser, appointment, false);
+            return ResponseEntity.ok(appointmentMapper.appointmentToAppointmentDTO(appointment));
         } catch (Exception e) {
             logger.error("Error getting appointment: {}", e.getMessage());
             throw e;
@@ -107,13 +113,17 @@ public class AppointmentsController {
         }
     }
 
+    @PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_VET') or hasRole('ROLE_OWNER')")
     @PutMapping("/update-appointment/{id}")
-    public ResponseEntity<?> updateAppointment(@PathVariable Long id, @RequestParam Long slotId) {
+    public ResponseEntity<?> updateAppointment(@PathVariable Long id, @RequestParam Long slotId) throws BadRequestException {
         try {
+            Appointment appointment = appointmentsService.findById(id);
+            org.fergoeqs.coursework.models.AppUser currentUser = userService.getAuthenticatedUser();
+            SecurityUtils.checkAppointmentAccess(currentUser, appointment, true);
             return ResponseEntity.ok(appointmentMapper.appointmentToAppointmentDTO(appointmentsService.update(id, slotId)));
         } catch (Exception e) {
             logger.error("Error updating appointment: {}", e.getMessage());
-            throw e;
+            throw new  BadRequestException("Error updating appointment: " + e.getMessage());
         }
     }
 

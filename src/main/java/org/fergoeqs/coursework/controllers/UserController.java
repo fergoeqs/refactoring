@@ -11,7 +11,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.ValidationException;
 import org.apache.coyote.BadRequestException;
 import org.fergoeqs.coursework.dto.*;
+import org.fergoeqs.coursework.exception.ForbiddenException;
 import org.fergoeqs.coursework.exception.InternalServerErrorException;
+import org.fergoeqs.coursework.exception.ResourceNotFoundException;
 import org.fergoeqs.coursework.exception.UnauthorizedAccessException;
 import org.fergoeqs.coursework.jwt.JwtService;
 import org.fergoeqs.coursework.models.AppUser;
@@ -26,7 +28,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.Optional;
 
 @Tag(name = "Users", description = "API для управления пользователями")
 @RestController
@@ -219,13 +220,27 @@ public class UserController {
     @Operation(summary = "Получить пользователя по ID", description = "Возвращает информацию о пользователе по его ID")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Пользователь найден",
-                    content = @Content(schema = @Schema(implementation = AppUser.class))),
-            @ApiResponse(responseCode = "404", description = "Пользователь не найден")
+                    content = @Content(schema = @Schema(implementation = AppUserDTO.class))),
+            @ApiResponse(responseCode = "404", description = "Пользователь не найден"),
+            @ApiResponse(responseCode = "403", description = "Доступ запрещен")
     })
     @SecurityRequirement(name = "Bearer Authentication")
     @GetMapping("/{id}")
-    public Optional<AppUser> getUserById(@Parameter(description = "ID пользователя") @PathVariable Long id) {
-        return userService.findById(id);
+    public ResponseEntity<?> getUserById(@Parameter(description = "ID пользователя") @PathVariable Long id) throws BadRequestException {
+        try {
+            AppUser user = userService.findById(id)
+                    .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
+            
+            AppUser currentUser = userService.getAuthenticatedUser();
+            if (!currentUser.getId().equals(id) && !currentUser.getRoles().contains(RoleType.ROLE_ADMIN)) {
+                throw new ForbiddenException("Access denied");
+            }
+            
+            return ResponseEntity.ok(appUserMapper.toDTO(user));
+        } catch (Exception e) {
+            logger.error("Error getting user by id: {}", e.getMessage());
+            throw e;
+        }
     }
 
     @Operation(summary = "Удалить пользователя", description = "Удаляет пользователя по ID")
